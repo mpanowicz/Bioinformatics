@@ -3,9 +3,9 @@ import re
 from collections import Counter, OrderedDict
 import itertools
 
-toFile = False			#Choose if create emptyMatrix file
-log = True				#Display additional info to console
-consoleLog = True		#Log all data froim console to file
+toFile = False		#Choose if create emptyMatrix file
+log = True		#Display additional info to console
+consoleLog = True	#Log all data froim console to file
 clearConsoleLog = True	#Create new console.log file
 
 if consoleLog :
