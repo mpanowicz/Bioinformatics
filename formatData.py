@@ -1,7 +1,9 @@
 import sys
 import re
-from collections import Counter
+from collections import Counter, OrderedDict
 import itertools
+
+toFile = False
 
 def extractData():
 	data = open(sys.argv[1], 'r').readlines()
@@ -20,7 +22,6 @@ def extractData():
 			out.write(sequence)
 			out.write('\n')
 			seqId += 1
-	data.close()
 	out.close()
 
 def cutSequence(seq):
@@ -31,19 +32,35 @@ def cutSequence(seq):
 	return cut
 
 def createEmptyMatrix():
-	out = open('emptyMatrix.out', 'w')
+	if toFile :
+		out = open('emptyMatrix.out', 'w')
+	matrix = []
 	all = itertools.product('acgt', repeat=10)
 	id = 0
+	row = []
 	for i in all:
 		if(id % 1024 == 0 and id != 0):
-			out.write('\n')
+			if toFile :
+				out.write('\n')
+			matrix.append(row)
+			row = []
 		convert = ''.join(i)
-		out.write(convert)
-		out.write(', ')
+		row.append({convert: 0})
+		if toFile :
+			out.write(convert)
+			out.write(', ')
 		id += 1
-	out.close()
+	if toFile :
+		out.close()
+	return matrix
 	
 def countSubsequences():
 	seq = 'tttttttttttttttatttataacgcctattgtagattgataggctctaaatttacaaacctgaatcgtacagatttgtacgaccgtttgggaaaggtatgccattatcggatgtataaattaccaatgtatcatccttgaatcctgccttttctaattcttcaagaacaaggccaacgcctttatctaaacgagatattgttgtatattgggcagcaatatctcttcgagcagcttcggtattctgaacatagtatggtactttaacttgctcccattgataatatattggattccaatcgggaattgtacccattccaatatcaccattgccgaatttctcacaaaaattgccatactctggatgcgtatgcccacagcgatgcggatcgtgaaaggcaacatacagaaagaagggttgtgttttattttgtgaaagaaattcgcggacaagtagctttatataagtaatattgcgacctacttgaagaatagaattattttcttctgtatatgcaaaatcaaatggataaacattactgggacctacatgtttcttgccaataattcctgttcgtatattatttcttttcaatatttttggcaaacttttaatattatcaaaagaattaaaatgatgaactccttgatgaagaccatacatcccattttgatgacttggtaatccagttaatatcgtggagcggcttggtgaacagctactgactgatgtgtacgcattgttgaatagtagactttcctttgccaatttatccaaattaggagtttgacatatcttatttaagtacgatcgcatttcaaaacctgcatcatcagccagcaataggagcacattttttcgagatatatcggtttttccatttgtgcacaagacaatacacaaaagccataataatttattcaaacagctgttcaacgacatatcatacaattgtgaaacgtgcgtctgcgttagcggtatacgcgtgtaagcacgtgaccgtggctgcgttccgatatacactgca'
-	matrix = Counter(cutSequence(seq))
-	print(matrix)
+	matrix = dict(Counter(cutSequence(seq)))
+	return matrix
+
+emptyMatrix = createEmptyMatrix()
+ordered = OrderedDict(sorted(countSubsequences().items()))
+
+for i, j in ordered.items():
+	print(i, j)
