@@ -8,26 +8,37 @@ log = True		#Display additional info to console
 consoleLog = True	#Log all data froim console to file
 clearConsoleLog = True	#Create new console.log file
 
-if consoleLog :
-	if clearConsoleLog : open('console.log', 'w')
-	sys.stdout = open('console.log', 'a')
+def log():
+	if consoleLog :
+		if clearConsoleLog : 
+			open('console.log', 'w')
+		sys.stdout = open('console.log', 'a')
 
-def extractData():
+def switch():
+	if len(sys.argv) > 1 :
+		log()
+		if sys.argv[1] == 'extractData':
+			extractData(sys.argv[2])
+		elif sys.argv[1] == 'getSequence':
+			getSequence(sys.argv[2])
+	else: print('Options:\n1) extractData - Create file with sequences based on file downloaded from DNA bank, parameter file path\n2) getSequence - Retrive choosen sequence from created file, parameters file path, sequence number')
+
+def extractData(file):
 	if log : print('Read input file')
-	data = open(sys.argv[1], 'r').readlines()
+	data = open(file, 'r').readlines()
 	out = open('out.seq', 'w')
 	text = ''.join(data)
 	regexText = 'ORIGIN(\s*([0-9][\satgc]*))*\/\/'
-	regex = re.compile('ORIGIN(\s*([0-9][\satgc]*))*\/\/', re.MULTILINE)
+	regex = re.compile(regexText, re.MULTILINE)
 	dnaText = '[atcg]+'
-	dna = re.compile('[atcg]+')
+	dna = re.compile(dnaText)
 	seqId = 1
 	if log : print('Extract data based on regex ' + regexText)
 	for i in re.finditer(regex, text):
 		sequence = ''
 		if log : print('Extract data based on regex ' + dnaText)
-		for i in re.finditer(dna, i.group(0)):
-			sequence += i.group(0)
+		for j in re.finditer(dna, i.group(0)):
+			sequence += j.group(0)
 		if log : print('If sequence length between 1000 and 1100 add it to file out.seq')
 		if len(sequence) >= 1000 and len(sequence) <= 1100:
 			out.write('seqId ' + str(seqId) + '. length ' + str(len(sequence)) + '\n')
@@ -69,7 +80,7 @@ def createEmptyMatrix():
 	if toFile :
 		out.close()
 	return matrix
-	
+
 def countSubsequences():
 	seq = 'tttttttttttttttatttataacgcctattgtagattgataggctctaaatttacaaacctgaatcgtacagatttgtacgaccgtttgggaaaggtatgccattatcggatgtataaattaccaatgtatcatccttgaatcctgccttttctaattcttcaagaacaaggccaacgcctttatctaaacgagatattgttgtatattgggcagcaatatctcttcgagcagcttcggtattctgaacatagtatggtactttaacttgctcccattgataatatattggattccaatcgggaattgtacccattccaatatcaccattgccgaatttctcacaaaaattgccatactctggatgcgtatgcccacagcgatgcggatcgtgaaaggcaacatacagaaagaagggttgtgttttattttgtgaaagaaattcgcggacaagtagctttatataagtaatattgcgacctacttgaagaatagaattattttcttctgtatatgcaaaatcaaatggataaacattactgggacctacatgtttcttgccaataattcctgttcgtatattatttcttttcaatatttttggcaaacttttaatattatcaaaagaattaaaatgatgaactccttgatgaagaccatacatcccattttgatgacttggtaatccagttaatatcgtggagcggcttggtgaacagctactgactgatgtgtacgcattgttgaatagtagactttcctttgccaatttatccaaattaggagtttgacatatcttatttaagtacgatcgcatttcaaaacctgcatcatcagccagcaataggagcacattttttcgagatatatcggtttttccatttgtgcacaagacaatacacaaaagccataataatttattcaaacagctgttcaacgacatatcatacaattgtgaaacgtgcgtctgcgttagcggtatacgcgtgtaagcacgtgaccgtggctgcgttccgatatacactgca'
 	cutted = cutSequence(seq)
@@ -78,5 +89,11 @@ def countSubsequences():
 	orderedDict = OrderedDict(sorted(subsequencesDict.items()))
 	return orderedDict
 
-countSubsequences()
+def getSequence(file):
+	text = ''.join(open(file, 'r').readlines())
+	regexText = 'seqId \d+. length \d{4}\n[atgc]*'
+	regex = re.compile(regexText, re.MULTILINE)
+	for i in re.finditer(regex, text):
+		print(i.group(0))
 
+switch()
