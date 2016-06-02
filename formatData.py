@@ -7,6 +7,7 @@ toFile = False		#Choose if create emptyMatrix file
 log = True		#Display additional info to console
 consoleLog = True	#Log all data froim console to file
 clearConsoleLog = True	#Create new console.log file
+menu = 'Options:\n1) extractData - Create file with sequences based on file downloaded from DNA bank, parameters: file path\n2) getSequence - Retrive choosen sequence from created file, parameters: file path, sequence id\n3) countSubsequences - Count amount of subsequences, parameters: file path, sequence id'
 
 def log():
 	if consoleLog :
@@ -16,12 +17,17 @@ def log():
 
 def switch():
 	if len(sys.argv) > 1 :
-		log()
 		if sys.argv[1] == 'extractData':
+			log()
 			extractData(sys.argv[2])
 		elif sys.argv[1] == 'getSequence':
-			getSequence(sys.argv[2])
-	else: print('Options:\n1) extractData - Create file with sequences based on file downloaded from DNA bank, parameter file path\n2) getSequence - Retrive choosen sequence from created file, parameters file path, sequence number')
+			log()
+			getSequence(sys.argv[2], sys.argv[3])
+		elif sys.argv[1] == 'countSubsequences':
+			log()
+			countSubsequences(getSequence(sys.argv[2], sys.argv[3]))
+		else : print('Choose other option\n' + menu)
+	else: print(menu)
 
 def extractData(file):
 	if log : print('Read input file')
@@ -52,7 +58,7 @@ def cutSequence(seq):
 	cut = []
 	for i in range(len(seq) - 9):
 		cut.append(seq[i:i+10])
-	cut.sort()
+	if log : print('cutSequence: ', cut)
 	return cut
 
 def createEmptyMatrix():
@@ -81,19 +87,26 @@ def createEmptyMatrix():
 		out.close()
 	return matrix
 
-def countSubsequences():
-	seq = 'tttttttttttttttatttataacgcctattgtagattgataggctctaaatttacaaacctgaatcgtacagatttgtacgaccgtttgggaaaggtatgccattatcggatgtataaattaccaatgtatcatccttgaatcctgccttttctaattcttcaagaacaaggccaacgcctttatctaaacgagatattgttgtatattgggcagcaatatctcttcgagcagcttcggtattctgaacatagtatggtactttaacttgctcccattgataatatattggattccaatcgggaattgtacccattccaatatcaccattgccgaatttctcacaaaaattgccatactctggatgcgtatgcccacagcgatgcggatcgtgaaaggcaacatacagaaagaagggttgtgttttattttgtgaaagaaattcgcggacaagtagctttatataagtaatattgcgacctacttgaagaatagaattattttcttctgtatatgcaaaatcaaatggataaacattactgggacctacatgtttcttgccaataattcctgttcgtatattatttcttttcaatatttttggcaaacttttaatattatcaaaagaattaaaatgatgaactccttgatgaagaccatacatcccattttgatgacttggtaatccagttaatatcgtggagcggcttggtgaacagctactgactgatgtgtacgcattgttgaatagtagactttcctttgccaatttatccaaattaggagtttgacatatcttatttaagtacgatcgcatttcaaaacctgcatcatcagccagcaataggagcacattttttcgagatatatcggtttttccatttgtgcacaagacaatacacaaaagccataataatttattcaaacagctgttcaacgacatatcatacaattgtgaaacgtgcgtctgcgttagcggtatacgcgtgtaagcacgtgaccgtggctgcgttccgatatacactgca'
-	cutted = cutSequence(seq)
+def getSequence(file, number):
+	if log : print('Retrive choosen sequence')
+	text = ''.join(open(file, 'r').readlines())
+	regexNumber = 'seqId ' + number + '. length \d{4}\n[acgt]+'
+	regex = re.compile(regexNumber, re.MULTILINE)
+	id = re.findall(regex, text)[0]
+	regexSequence = '[acgt]+'
+	regex = re.compile(regexSequence)
+	if log : print('getSequence: ', [id, re.findall(regex, id)[1]])
+	return [id, re.findall(regex, id)[1]]
+
+def countSubsequences(seq):
+	cutted = cutSequence(seq[1])
 	if log : print('Count subsequences in given sequence')
 	subsequencesDict = dict(Counter(cutted))
 	orderedDict = OrderedDict(sorted(subsequencesDict.items()))
-	return orderedDict
-
-def getSequence(file):
-	text = ''.join(open(file, 'r').readlines())
-	regexText = 'seqId \d+. length \d{4}\n[atgc]*'
-	regex = re.compile(regexText, re.MULTILINE)
-	for i in re.finditer(regex, text):
-		print(i.group(0))
+	array = []
+	for sub, count in orderedDict.items():
+		array.append([sub, count])
+	if log : print('countSubsequences: ', array)
+	return(array)
 
 switch()
