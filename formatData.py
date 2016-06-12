@@ -7,6 +7,7 @@ toFile = False		#Choose if create emptyMatrix file
 log = False		#Display additional info to console
 consoleLog = True	#Log all data froim console to file
 clearConsoleLog = True	#Create new console.log file
+out = True	#Log data as output file
 menu = 'Options:\n1) extractData - Create file with sequences based on file downloaded from DNA bank, parameters: file path to *.seq creates file out.seq\n2) getSequence - Retrive choosen sequence from created file, parameters: file path to out.seq, sequence id\n3) countSubsequences - Count amount of subsequences, parameters: file path to out.seq, sequence id\n4) matrixBasedOnSequence - Create full matrix without mistakes, parameters: file path to out.seq, sequence id'
 
 def logging():
@@ -25,10 +26,13 @@ def switch():
 			getSequence(sys.argv[2], sys.argv[3])
 		elif sys.argv[1] == 'countSubsequences':
 			logging()
-			countSubsequences(getSequence(sys.argv[2], sys.argv[3]))
+			countSubsequences(getSequence(sys.argv[2], sys.argv[3]), 10)
 		elif sys.argv[1] == 'matrixBasedOnSequence':
 			logging()
-			matrixBasedOnSequence(countSubsequences(getSequence(sys.argv[2], sys.argv[3])))
+			matrixBasedOnSequence(countSubsequences(getSequence(sys.argv[2], sys.argv[3]), 10))
+		elif sys.argv[1] == 'countRep':
+			logging()
+			countRep(sys.argv[2], sys.argv[3])
 		else : print('Choose other option\n' + menu)
 	else: print(menu)
 
@@ -58,9 +62,25 @@ def extractData(file):
 
 def cutSequence(seq):
 	if log == True : print('Cut given sequence into 10 letter length subsequences')
+	l = len(seq)
+	if out == True : 
+		print(l)
+		print(seq[:l])
 	cut = []
-	for i in range(len(seq) - 9):
+	for i in range(l - 9):
 		cut.append(seq[i:i+10])
+	if log == True : print('cutSequence: ', cut)
+	return cut
+
+def cutSequenceLen(seq, repLen):
+	if log == True : print('Cut given sequence into', repLen, 'letter length subsequences')
+	l = 500#len(seq)
+	if out == True and repLen == 10 : 
+		print(l)
+		print(seq[:l])
+	cut = []
+	for i in range(l - repLen - 1):
+		cut.append(seq[i:i+repLen])
 	if log == True : print('cutSequence: ', cut)
 	return cut
 
@@ -107,23 +127,36 @@ def getSequence(file, number):
 	if log == True : print('getSequence: ', [id, re.findall(regex, id)[1]])
 	return [id, re.findall(regex, id)[1]]
 
-def countSubsequences(seq):
-	cutted = cutSequence(seq[1])
+def countSubsequences(seq, l):
+	cutted = cutSequenceLen(seq[1], l)
 	if log == True : print('Count subsequences in given sequence')
 	subsequencesDict = dict(Counter(cutted))
 	orderedDict = OrderedDict(sorted(subsequencesDict.items()))
 	array = {}
+	rep = 0
 	for sub, count in orderedDict.items():
 		array[sub] = count
+		if count > 1:
+			rep = rep + count - 1
 	if log == True : print('countSubsequences: ', array)
-	return(array)
+	if out == True and l == 10 : print(array)
+	return([array, rep])
 
 def matrixBasedOnSequence(count):
 	empty = createEmptyMatrix()
-	for i in count:
-		empty[i] = count[i]
+	for i in count[0]:
+		empty[i] = count[0][i]
 	matrix = sorted(empty.items())
 	if log == True : print('matrixBasedOnSequence: ', matrix)
 	return matrix
+
+def countRep(file, id):
+	rep = {}
+	all = 0;
+	for i in range(10, 200):
+		rep[i] = countSubsequences(getSequence(file, id), i)[1]
+		all += rep[i]
+	print(rep)
+	print(all)
 
 switch()
